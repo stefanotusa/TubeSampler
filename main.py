@@ -27,6 +27,7 @@ from googleapiclient.discovery import build
 from pytube import YouTube
 
 def main():
+
     # Instantiate YouTube service
     api_service_name = "youtube"
     api_version = "v3"
@@ -36,11 +37,17 @@ def main():
     resp = yt_service.search().list(
         part="snippet",
         type="youtube#video",
-        maxResults=5,
+        maxResults=2,
         q="surfing"
     ).execute()
 
-    print(json.dumps(resp, sort_keys=True, indent=4))
+    links = []
+    for result in resp["items"]:
+        if result["id"]["kind"] == "youtube#video":
+            links.append("https://www.youtube.com/watch?v=" + result["id"]["videoId"])
+    print(links)
+
+    # print(json.dumps(resp, sort_keys=True, indent=4))
 
 if __name__ == "__main__":
     main()
