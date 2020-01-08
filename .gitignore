@@ -1,0 +1,8 @@
+# output folder
+output/
+
+# client secrets
+secrets.json
+
+# Video files
+*.mp4
