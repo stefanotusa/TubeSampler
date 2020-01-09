@@ -21,7 +21,8 @@ pip install pytube
 pip install --upgrade google-api-python-client
 pip install --upgrade google-auth-oauthlib google-auth-httplib2
 pip install spotipy
-pip install
+pip install pafy
+pip install youtube-dl
 
 """
 import sys
@@ -30,17 +31,36 @@ import spotipy
 import spotipy.util as util
 from googleapiclient.discovery import build
 from pytube import YouTube
+import pafy
 import subprocess
+import os, fnmatch
+import re
+import traceback
 
+def find(pattern, path):
+    result = []
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            if fnmatch.fnmatch(name, pattern):
+                result.append(os.path.join(root, name))
+    return result
+
+def name_clean(dirty_filename):
+    clean_name = re.sub(r'[^\w\-\(\)\_\s\.]', "", dirty_filename)
+    return clean_name
 
 def main():
-
+    """
+    dirty = "C.R.E.A.M - Shoop Dogg and the Tang(Yu know what iz) Gang"
+    print(name_clean(dirty))
+    """
     spotify_username = "thegreatbelow1"
-    input_folder = "\"C:\\Users\Stefano Daniel\Desktop\TubeSampler\\tube\\" # WARNING! THIS STRING IS MISSING QUOTE ON END AND EXPECTS IT TO BE APPENDED AT WRITE-TIME.
-    output_folder = "\"C:\\Users\Stefano Daniel\Desktop\TubeSampler\\tube\output\\" # WARNING! THIS STRING IS MISSING QUOTE ON END AND EXPECTS IT TO BE APPENDED AT WRITE-TIME.
+    input_folder = "C:\\Users\Stefano Daniel\Desktop\TubeSampler\\tube\\" 
+    output_folder = "C:\\Users\Stefano Daniel\Desktop\TubeSampler\\tube\output\\"
     with open("secrets.json", "r") as read_file:
             client_secrets = json.load(read_file)
 
+    
     # List of songs to download
     query_list = []
 
@@ -85,31 +105,39 @@ def main():
         # Find the first video hit (ie. not a channel hit)
         for result in resp["items"]:
             if result["id"]["kind"] == "youtube#video":
-                video_titles.append(result["snippet"]["title"])
+                video_title = result["snippet"]["title"]
+                video_titles.append(name_clean(video_title)) # Remove characters that can't be included in filename
+                # video_titles.append(result["snippet"]["title"])
                 links.append("https://www.youtube.com/watch?v=" + result["id"]["videoId"])
                 break
 
+    # Start preparing for writing
+    streams = []
     # Download each video from stream with highest average bit rate
+    for link in links:
+        yt = pafy.new(link)
+        ba = yt.getbestaudio()
+        streams.append(ba)
+    
+    """
     for link in links:
         try:
             yt = YouTube(link)
             yt.streams.filter(progressive=True).order_by("abr").desc().first().download()
-        except:
+        except Exception as e:
             # Some regex error or some bullshit
+            traceback.print_tb(e.__traceback__)
+            print(repr(e))
             pass
-    
-    print("Huh?")
     """
-    video_titles = [
-        "Mac Miller - Red Dot Music (ft Action Bronson) (NoDJCDQ)",
-        "Mac Miller - Watching Movies (Official Audio)"
-    ]
-    """
-    # Strip audio from each video
-    for video_title in video_titles:
-        input_filename = video_title + ".mp4"
-        output_filename = video_title + ".wav"
-        command = "ffmpeg -i %s -ab 160k -ac 2 -ar 44100 -vn %s" % (input_folder + input_filename + "\"", output_folder + output_filename + "\"")
+    # Download video from stream object, packaging labels beforehand
+    for i, stream in enumerate(streams):
+        input_video_file_ext = stream.extension
+        input_video_filename = stream.title
+        stream.download()
+        input_filename = name_clean(input_video_filename) + "."+ input_video_file_ext
+        output_filename = input_video_filename + ".wav"
+        command = "ffmpeg -i %s -ab 160k -ac 2 -ar 44100 -vn %s" % ("\"" + input_folder + input_filename + "\"", "\""+ output_folder + output_filename + "\"")
         # print(command)
         subprocess.call(command, shell=True)
 
