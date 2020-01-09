@@ -46,7 +46,7 @@ def find(pattern, path):
     return result
 
 def name_clean(dirty_filename):
-    clean_name = re.sub(r'[^\w\-\(\)\_\s\.]', "", dirty_filename)
+    clean_name = re.sub(r'[^\w\-\(\)\_\s\.\,]', "", dirty_filename)
     return clean_name
 
 def main():
