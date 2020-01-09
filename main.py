@@ -1,5 +1,5 @@
 """
-TubeSampler v1 Documentation
+TubeSampler v1.00 Documentation
 
 Step 1 - Log into my Spotify account and get list of
          songs in TubeSampler playlist
@@ -12,7 +12,6 @@ Step 3 (Optional) - Scan TubeSampler folder on computer
          to avoid downloading repeat songs
 
 Step 4- Use PyTube to download songs to TubeSampler folder
-
 
 
 To install dependencies, run the following commands:
